@@ -7,6 +7,12 @@
 *.o
 *.obj
 
+# User stuff
+*.user
+
+# Visual Studio
+.vs/
+
 # Precompiled Headers
 *.gch
 *.pch
@@ -30,3 +36,6 @@
 *.exe
 *.out
 *.app
+
+# Debug builds
+x64/

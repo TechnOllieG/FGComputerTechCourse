@@ -27,5 +27,5 @@ private:
 	std::vector<int> returnedIds;
 
 	int currentFreeId = 0;
-	SDL_Renderer* renderer;
+	SDL_Renderer* renderer = nullptr;
 };

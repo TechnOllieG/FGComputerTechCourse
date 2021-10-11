@@ -15,12 +15,11 @@ Engine::Engine(SDL_Renderer* renderer)
 		return;
 	}
 	instance = this;
+	this->renderer = renderer;
 }
 
 void Engine::Run()
 {
-	this->renderer = renderer;
-
 	std::vector<System> systems;
 
 	RegisterSystems(systems);

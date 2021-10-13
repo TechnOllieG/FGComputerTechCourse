@@ -62,34 +62,27 @@ public class PointManager : MonoBehaviour {
 			float spacing = 2f;
 			for (int j = 0; j < height; j++) {
 				Point point = new Point();
-				point.x = pos.x+spacing;
-				point.y = j * spacing;
-				point.z = pos.z-spacing;
-				point.oldX = point.x;
-				point.oldY = point.y;
-				point.oldZ = point.z;
+				point.x = point.oldX = pos.x + spacing;
+				point.y = point.oldY = j * spacing;
+				point.z = point.oldZ = pos.z - spacing;
 				if (j==0) {
 					point.anchor=true;
 				}
 				pointsList.Add(point);
+				
 				point = new Point();
-				point.x = pos.x-spacing;
-				point.y = j * spacing;
-				point.z = pos.z-spacing;
-				point.oldX = point.x;
-				point.oldY = point.y;
-				point.oldZ = point.z;
+				point.x = point.oldX = pos.x - spacing;
+				point.y = point.oldY = j * spacing;
+				point.z = point.oldZ = pos.z - spacing;
 				if (j==0) {
 					point.anchor=true;
 				}
 				pointsList.Add(point);
+				
 				point = new Point();
-				point.x = pos.x+0f;
-				point.y = j * spacing;
-				point.z = pos.z+spacing;
-				point.oldX = point.x;
-				point.oldY = point.y;
-				point.oldZ = point.z;
+				point.x = point.oldX = pos.x + 0f;
+				point.y = point.oldY = j * spacing;
+				point.z = point.oldZ = pos.z + spacing;
 				if (j==0) {
 					point.anchor=true;
 				}
@@ -101,21 +94,15 @@ public class PointManager : MonoBehaviour {
 		for (int i=0;i<600;i++) {
 			Vector3 pos = new Vector3(Random.Range(-55f,55f),0f,Random.Range(-55f,55f));
 			Point point = new Point();
-			point.x = pos.x + Random.Range(-.2f,-.1f);
-			point.y = pos.y+Random.Range(0f,3f);
-			point.z = pos.z + Random.Range(.1f,.2f);
-			point.oldX = point.x;
-			point.oldY = point.y;
-			point.oldZ = point.z;
+			point.x = point.oldX = pos.x + Random.Range(-.2f,-.1f);
+			point.y = point.oldY = pos.y+Random.Range(0f,3f);
+			point.z = point.oldZ = pos.z + Random.Range(.1f,.2f);
 			pointsList.Add(point);
 
 			point = new Point();
-			point.x = pos.x + Random.Range(.2f,.1f);
-			point.y = pos.y + Random.Range(0f,.2f);
-			point.z = pos.z + Random.Range(-.1f,-.2f);
-			point.oldX = point.x;
-			point.oldY = point.y;
-			point.oldZ = point.z;
+			point.x = point.oldX = pos.x + Random.Range(.2f,.1f);
+			point.y = point.oldY = pos.y + Random.Range(0f,.2f);
+			point.z = point.oldZ = pos.z + Random.Range(-.1f,-.2f);
 			if (Random.value<.1f) {
 				point.anchor = true;
 			}

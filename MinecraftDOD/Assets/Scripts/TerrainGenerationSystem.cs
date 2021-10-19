@@ -4,6 +4,7 @@ using Unity.Entities;
 using Unity.Mathematics;
 using Unity.Transforms;
 using UnityEngine;
+using UnityEngine.Jobs;
 
 namespace TechnOllieG
 {
@@ -28,7 +29,13 @@ namespace TechnOllieG
 
 		protected override void OnUpdate()
 		{
-			DetermineChunksToGenerate(ConvertPositionToChunkCoordinate(Vector3.zero));
+			EntityQuery query = GetEntityQuery(ComponentType.ReadOnly<Translation>(), ComponentType.ReadOnly<GameData>());
+			var array = query.ToEntityArray(Allocator.Temp);
+			Translation translation = EntityManager.GetComponentData<Translation>(array[0]);
+			array.Dispose();
+
+			float3 position = translation.Value;
+			DetermineChunksToGenerate(ConvertPositionToChunkCoordinate(position));
 			GenerateChunks();
 			DegenerateChunks();
 		}
@@ -50,8 +57,14 @@ namespace TechnOllieG
 		{
 			if (_chunksToDegenerate.Count == 0)
 				return;
-			
-			// todo implement
+
+			foreach (int2 chunk in _chunksToDegenerate)
+			{
+				EntityQuery query = GetEntityQuery(ComponentType.ReadOnly<BlockState>(), ComponentType.ReadOnly<ChunkCoordinate>());
+				query.SetSharedComponentFilter(new ChunkCoordinate {chunkCoordinate = chunk});
+				EntityManager.DestroyEntity(query);
+				_currentlyGeneratedChunks.Remove(chunk);
+			}
 			
 			_chunksToDegenerate.Clear();
 		}
@@ -69,7 +82,7 @@ namespace TechnOllieG
 			int extents = _data.worldExtents;
 			float xOffset = _data.xOffset;
 			float yOffset = _data.yOffset;
-			float scale = _data.scale;
+			float scale = _data.scale * (_data.worldExtents * 2 + 1);
 			float depth = _data.depth;
 			
 			ChunkCoordinate coordinate;
@@ -105,10 +118,10 @@ namespace TechnOllieG
 		
 		private void DetermineChunksToGenerate(int2 currentChunk)
 		{
-
 			int renderDistance = _data.renderDistance;
+			int worldExtents = _data.worldExtents;
 			List<int2> currentChunksToRender = new List<int2> {currentChunk};
-
+			
 			for (int i = 1; i <= renderDistance; i++)
 			{
 				int startOfCardinals = currentChunksToRender.Count;
@@ -118,29 +131,25 @@ namespace TechnOllieG
 				currentChunksToRender.Add(currentChunk.WithAdd(x: -i));
 				currentChunksToRender.Add(currentChunk.WithAdd(y: i));
 				currentChunksToRender.Add(currentChunk.WithAdd(y: -i));
-				
-				// Corners
-				currentChunksToRender.Add(currentChunk.WithAdd(x: i, y: i));
-				currentChunksToRender.Add(currentChunk.WithAdd(x: i, y: -i));
-				currentChunksToRender.Add(currentChunk.WithAdd(x: -i, y: i));
-				currentChunksToRender.Add(currentChunk.WithAdd(x: -i, y: -i));
-				
-				// Edges
-				int2 baseCardinal = currentChunksToRender[startOfCardinals];
-				int2 incrementAxis = new int2(0, 1);
-				
-				for (int j = 0; j < 4; j++)
+
+				int2 cardinal1 = currentChunksToRender[startOfCardinals];
+				int2 cardinal2 = currentChunksToRender[startOfCardinals + 1];
+
+				// Along y axis on both x cardinals
+				bool p = true;
+				for (int j = 0; j < 2; j++)
 				{
-					for (int k = 1; k <= (renderDistance - 1) * 2; k++)
+					for (int k = 1; k <= renderDistance; k++)
 					{
-						currentChunksToRender.Add(baseCardinal + incrementAxis * k);
-						currentChunksToRender.Add(baseCardinal - incrementAxis * k);
+						currentChunksToRender.Add(cardinal1 + new int2(0, p ? 1 : -1) * k);
 					}
 					
-					baseCardinal = currentChunksToRender[++startOfCardinals];
+					for (int k = 1; k <= renderDistance; k++)
+					{
+						currentChunksToRender.Add(cardinal2 + new int2(0, p ? 1 : -1) * k);
+					}
 
-					if (j == 1)
-						incrementAxis = new int2(1, 0);
+					p = !p;
 				}
 			}
 
@@ -156,12 +165,16 @@ namespace TechnOllieG
 			{
 				if (_currentlyGeneratedChunks.Contains(current))
 					continue;
+
+				if (current.x > worldExtents || current.x < -worldExtents ||
+				    current.y > worldExtents || current.y < -worldExtents)
+					continue;
 				
 				_chunksToGenerate.Add(current);
 			}
 		}
 		
-		int2 ConvertPositionToChunkCoordinate(Vector3 position)
+		int2 ConvertPositionToChunkCoordinate(float3 position)
 		{
 			return new int2((int) math.floor(position.x / _data.chunkSize), (int) math.floor(position.z / _data.chunkSize));
 		}

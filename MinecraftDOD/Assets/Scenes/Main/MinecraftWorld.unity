@@ -157,10 +157,11 @@ MonoBehaviour:
   stone: {fileID: 7203002861460054483, guid: 78f92ddb015e15142a25914b016e7569, type: 3}
   wood: {fileID: 6463962426215018569, guid: 5fbdfdef0153bd04385c03fedcda88cf, type: 3}
   leaves: {fileID: 2175436484146686222, guid: 0a3a41441e22ae14ea61a5091cd5456d, type: 3}
-  worldExtents: 0
+  worldExtents: 3
   chunkSize: 16
   layersOfDirt: 2
   layersOfStone: 10
+  renderDistance: 3
   scale: 1
   depth: 10
   xOffset: 0

@@ -19,6 +19,8 @@ namespace TechnOllieG
 		public int chunkSize;
 		public int layersOfDirt;
 		public int layersOfStone;
+		[Tooltip("The render distance in extents, 0 will only render the current chunk you're in, 1 will render a 3x3 around you etc.")]
+		public int renderDistance;
 
 		public float scale;
 		public float depth;

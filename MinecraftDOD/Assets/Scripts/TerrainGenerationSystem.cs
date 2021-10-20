@@ -29,6 +29,8 @@ namespace TechnOllieG
 
 		protected override void OnUpdate()
 		{
+			DrawTestCube();
+			
 			EntityQuery query = GetEntityQuery(ComponentType.ReadOnly<Translation>(), ComponentType.ReadOnly<GameData>());
 			var array = query.ToEntityArray(Allocator.Temp);
 			Translation translation = EntityManager.GetComponentData<Translation>(array[0]);
@@ -38,6 +40,48 @@ namespace TechnOllieG
 			DetermineChunksToGenerate(ConvertPositionToChunkCoordinate(position));
 			GenerateChunks();
 			DegenerateChunks();
+		}
+
+		private void DrawTestCube()
+		{
+			Vector3[] vertices = {
+				new Vector3 (0, 0, 0),
+				new Vector3 (1, 0, 0),
+				new Vector3 (1, 1, 0),
+				new Vector3 (0, 1, 0),
+				new Vector3 (0, 1, 1),
+				new Vector3 (1, 1, 1),
+				new Vector3 (1, 0, 1),
+				new Vector3 (0, 0, 1),
+			};
+
+			int[] triangles = {
+				0, 2, 1, //face front
+				0, 3, 2,
+				2, 3, 4, //face top
+				2, 4, 5,
+				1, 2, 5, //face right
+				1, 5, 6,
+				0, 7, 4, //face left
+				0, 4, 3,
+				5, 4, 7, //face back
+				5, 7, 6,
+				0, 6, 7, //face bottom
+				0, 1, 6
+			};
+
+			Mesh mesh = new Mesh();
+			mesh.Clear();
+			mesh.vertices = vertices;
+			mesh.triangles = triangles;
+			mesh.Optimize();
+			mesh.RecalculateNormals();
+
+			Matrix4x4 matrix = Matrix4x4.TRS(new Vector3(0f, 100f, 0f), Quaternion.identity, Vector3.one);
+			Material material = new Material(Shader.Find("Standard"));
+			material.enableInstancing = true;
+			
+			Graphics.DrawMeshInstanced(mesh, 0, material,new [] {matrix});
 		}
 
 		private void GenerateChunks()

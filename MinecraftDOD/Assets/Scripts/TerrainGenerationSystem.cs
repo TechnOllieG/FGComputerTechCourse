@@ -142,9 +142,8 @@ namespace TechnOllieG
 					int2 chunkSpaceBlockCoordinate =
 						new int2(blockIndexInChunk % chunkSize, blockIndexInChunk / chunkSize);
 
-					int2 zeroIndexedChunkCoordinate = (int2) math.remap(new float2(-extents), new float2(extents),
-						float2.zero,
-						new float2(extents * 2), chunkCoordinates);
+					int2 zeroIndexedChunkCoordinate =
+						new int2(chunkCoordinates.x + extents, chunkCoordinates.y + extents);
 
 					int worldSizeInBlocks = (extents * 2 + 1) * chunkSize;
 					float noiseX = (float) (zeroIndexedChunkCoordinate.x * chunkSize + chunkSpaceBlockCoordinate.x) / worldSizeInBlocks * scale + xOffset;

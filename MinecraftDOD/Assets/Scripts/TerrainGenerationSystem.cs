@@ -15,6 +15,7 @@ namespace TechnOllieG
 		private List<int2> _chunksToDegenerate = new List<int2>();
 		private List<int2> _currentlyGeneratedChunks = new List<int2>();
 		private EntityQueryDesc _objectsWithoutCoordinateComponentDesc;
+		private Transform _cameraTf;
 
 		protected override void OnStartRunning()
 		{
@@ -25,19 +26,16 @@ namespace TechnOllieG
 				None = new ComponentType[] {typeof(ChunkCoordinate)},
 				All = new ComponentType[] {typeof(Translation), ComponentType.ReadOnly<BlockState>()}
 			};
+
+			_cameraTf = Camera.main.transform;
 		}
 
 		protected override void OnUpdate()
 		{
 			DrawTestCube();
-			
-			EntityQuery query = GetEntityQuery(ComponentType.ReadOnly<Translation>(), ComponentType.ReadOnly<GameData>());
-			var array = query.ToEntityArray(Allocator.Temp);
-			Translation translation = EntityManager.GetComponentData<Translation>(array[0]);
-			array.Dispose();
 
-			float3 position = translation.Value;
-			DetermineChunksToGenerate(ConvertPositionToChunkCoordinate(position));
+			Vector3 cameraPos = _cameraTf.position;
+			DetermineChunksToGenerate(ConvertPositionToChunkCoordinate(cameraPos));
 			GenerateChunks();
 			DegenerateChunks();
 		}
@@ -88,6 +86,7 @@ namespace TechnOllieG
 		{
 			if (_chunksToGenerate.Count == 0)
 				return;
+			Camera test = Camera.main;
 
 			foreach (int2 chunk in _chunksToGenerate)
 			{

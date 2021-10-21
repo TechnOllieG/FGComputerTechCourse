@@ -9,5 +9,6 @@ namespace TechnOllieG
 		public float friction;
 		public float jumpImpulse;
 		public float gravity;
+		public float jumpCooldown;
 	}
 }

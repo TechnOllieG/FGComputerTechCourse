@@ -10,6 +10,8 @@ namespace TechnOllieG
 {
 	public class TerrainGenerationSystem : SystemBase
 	{
+		public static TerrainGenerationSystem Instance;
+
 		private GameData _data;
 		private List<int2> _chunksToGenerate = new List<int2>();
 		private List<int2> _chunksToDegenerate = new List<int2>();
@@ -19,6 +21,11 @@ namespace TechnOllieG
 
 		protected override void OnStartRunning()
 		{
+			if (Instance == null)
+				Instance = this;
+			else
+				Enabled = false;
+			
 			_data = GetSingleton<GameData>();
 
 			_objectsWithoutCoordinateComponentDesc = new EntityQueryDesc
@@ -32,8 +39,6 @@ namespace TechnOllieG
 
 		protected override void OnUpdate()
 		{
-			DrawTestCube();
-
 			Vector3 cameraPos = _cameraTf.position;
 			DetermineChunksToGenerate(ConvertPositionToChunkCoordinate(cameraPos));
 			GenerateChunks();
@@ -80,6 +85,11 @@ namespace TechnOllieG
 			material.enableInstancing = true;
 			
 			Graphics.DrawMeshInstanced(mesh, 0, material,new [] {matrix});
+		}
+
+		public void SetRenderDistance(int renderDistance)
+		{
+			_data.renderDistance = renderDistance;
 		}
 
 		private void GenerateChunks()

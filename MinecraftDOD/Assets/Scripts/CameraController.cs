@@ -2,6 +2,7 @@
 
 namespace TechnOllieG
 {
+	[DefaultExecutionOrder(-1)]
 	public class CameraController : MonoBehaviour
 	{
 		[Header("FOV")]
@@ -47,6 +48,9 @@ namespace TechnOllieG
 
 		private void Update()
 		{
+			if (PauseMenu.isPaused)
+				return;
+			
 			if (!useCameraMovement)
 				return;
 			
@@ -90,6 +94,9 @@ namespace TechnOllieG
 
 		private void LateUpdate()
 		{
+			if (PauseMenu.isPaused)
+				return;
+			
 			Vector3 mouseDelta = new Vector3(Input.GetAxis("Mouse X"), Input.GetAxis("Mouse Y"));
 			accumulatedMouseDelta += mouseDelta * (Time.deltaTime * sensitivityScale);
 		

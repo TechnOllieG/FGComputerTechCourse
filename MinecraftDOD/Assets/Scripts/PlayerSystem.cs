@@ -6,7 +6,6 @@ using Unity.Transforms;
 using UnityEngine;
 
 using RaycastHit = Unity.Physics.RaycastHit;
-using Ray = Unity.Physics.Ray;
 
 namespace TechnOllieG
 {
@@ -28,12 +27,16 @@ namespace TechnOllieG
 		{
 			_camTf = Camera.main.transform;
 			_camController = _camTf.GetComponent<CameraController>();
-			if (_camController.useCameraMovement)
-				Enabled = false;
 		}
 
 		protected override void OnUpdate()
 		{
+			if (PauseMenu.isPaused)
+				return;
+			
+			if (_camController.useCameraMovement)
+				return;
+
 			float forwardInput = (Input.GetKey(KeyCode.W) ? 1 : 0) - (Input.GetKey(KeyCode.S) ? 1 : 0);
 			float rightInput = (Input.GetKey(KeyCode.D) ? 1 : 0) - (Input.GetKey(KeyCode.A) ? 1 : 0);
 			bool jumpInput = Input.GetKey(KeyCode.Space);
@@ -71,7 +74,7 @@ namespace TechnOllieG
 			return Raycast(playerPos, playerPos + math.down() * (extents + 0.1f));
 		}
 		
-		public bool Raycast(float3 from, float3 to, out RaycastHit hit, out Entity entity)
+		public bool Raycast(float3 from, float3 to, out RaycastHit hit)
 		{
 			var collisionWorld = _buildPhysicsWorldSystem.PhysicsWorld.CollisionWorld;
 			
@@ -88,26 +91,14 @@ namespace TechnOllieG
 			};
 			
 			bool blockingHit = collisionWorld.CastRay(input, out hit);
-			if (blockingHit)
-			{
-				entity = _buildPhysicsWorldSystem.PhysicsWorld.Bodies[hit.RigidBodyIndex].Entity;
-			}
-			else entity = new Entity();
 			
 			return blockingHit;
 		}
 
-		public bool Raycast(float3 from, float3 to, out RaycastHit hit)
-		{
-			Entity entity;
-			return Raycast(from, to, out hit, out entity);
-		}
-		
 		public bool Raycast(float3 from, float3 to)
 		{
-			Entity entity;
 			RaycastHit hit;
-			return Raycast(from, to, out hit, out entity);
+			return Raycast(from, to, out hit);
 		}
 	}
 }

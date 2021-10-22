@@ -31,3 +31,5 @@ When the player moves, the system generates new chunks and adds chunks that shou
 Today (the final day) I have worked on only rendering quads that actually are exposed instead of the full blocks which should in theory give much better performance because of the significant decrease in triangles.
 I am planning on using DrawMeshInstanced and make a custom shader that takes in a bitmask to determine which part of the texture it should render on the quad.
 I've been battling with the API to figure out when a multi-threaded job is done (to then run another job that determines which sides are exposed) but I haven't quite gotten there. I still feel motivated though so I'll keep working on it when I have time.
+
+Additionally I think it's a good idea to spawn the entities using an entity command buffer also to make spawning multi-threaded also.

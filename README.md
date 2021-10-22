@@ -2,7 +2,7 @@
 A small minecraft clone made using Unity DOTS
 
 # How to play
-Run around with WASD and jump with space, press F3 to view coordiantes and chunk coordinates, press escape to change render distance, hold f3 and press n to eject the camera from the player and fly around, press f3+n again to snap back to the player.
+There is a build to download in releases. Run around with WASD and jump with space, press F3 to view coordiantes and chunk coordinates, press escape to change render distance, hold f3 and press n to eject the camera from the player and fly around, press f3+n again to snap back to the player.
 
 # How I used DOD
 A while back during the algorithms & data structures course I made my first Minecraft clone with procedural terrain generation that was made using perlin noise.

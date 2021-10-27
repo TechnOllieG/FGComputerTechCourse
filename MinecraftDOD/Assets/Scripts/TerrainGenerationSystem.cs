@@ -1,7 +1,9 @@
 ﻿using System.Collections.Generic;
 using Unity.Collections;
 using Unity.Entities;
+using Unity.Jobs;
 using Unity.Mathematics;
+using Unity.Physics.GraphicsIntegration;
 using Unity.Transforms;
 using UnityEngine;
 using UnityEngine.Jobs;
@@ -18,6 +20,7 @@ namespace TechnOllieG
 		private List<int2> _currentlyGeneratedChunks = new List<int2>();
 		private EntityQueryDesc _objectsWithoutCoordinateComponentDesc;
 		private Transform _cameraTf;
+		private List<int2> _chunksScheduledForGeneration = new List<int2>();
 
 		protected override void OnStartRunning()
 		{
@@ -42,49 +45,88 @@ namespace TechnOllieG
 			Vector3 cameraPos = _cameraTf.position;
 			DetermineChunksToGenerate(ConvertPositionToChunkCoordinate(cameraPos));
 			GenerateChunks();
+			CalculateExposedQuads();
 			DegenerateChunks();
 		}
-
-		private void DrawTestCube()
+		
+		private void CalculateExposedQuads()
 		{
-			Vector3[] vertices = {
-				new Vector3 (0, 0, 0),
-				new Vector3 (1, 0, 0),
-				new Vector3 (1, 1, 0),
-				new Vector3 (0, 1, 0),
-				new Vector3 (0, 1, 1),
-				new Vector3 (1, 1, 1),
-				new Vector3 (1, 0, 1),
-				new Vector3 (0, 0, 1),
+			foreach(int2 chunk in _chunksScheduledForGeneration)
+			{
+				ChunkCoordinate coordinate = new ChunkCoordinate {chunkCoordinate = chunk};
+				
+				Entities.WithSharedComponentFilter(coordinate).ForEach(
+					(ref BlockState blockState, in Translation translation) =>
+					{
+						byte currentBitmask = 0;
+						NativeArray<float3> neighbors = new NativeArray<float3>(6, Allocator.Temp);
+						{
+							neighbors[0] = translation.Value.WithAdd(x: 1);
+							neighbors[1] = translation.Value.WithAdd(x: -1);
+							neighbors[2] = translation.Value.WithAdd(y: 1);
+							neighbors[3] = translation.Value.WithAdd(y: -1);
+							neighbors[4] = translation.Value.WithAdd(z: 1);
+							neighbors[5] = translation.Value.WithAdd(z: -1);
+						}
+
+						for (int i = 0; i < neighbors.Length; i++)
+						{
+							// todo finish
+						}
+
+						neighbors.Dispose();
+					}).Schedule();
+			}
+
+			_chunksScheduledForGeneration.Clear();
+		}
+
+		private Mesh MakeQuadMesh()
+		{
+			Vector3[] vertices = new Vector3[4]
+			{
+				new Vector3(0, 0, 0),
+				new Vector3(1, 0, 0),
+				new Vector3(0, 0, 1),
+				new Vector3(1, 0, 1)
 			};
-
-			int[] triangles = {
-				0, 2, 1, //face front
-				0, 3, 2,
-				2, 3, 4, //face top
-				2, 4, 5,
-				1, 2, 5, //face right
-				1, 5, 6,
-				0, 7, 4, //face left
-				0, 4, 3,
-				5, 4, 7, //face back
-				5, 7, 6,
-				0, 6, 7, //face bottom
-				0, 1, 6
-			};
-
-			Mesh mesh = new Mesh();
-			mesh.Clear();
-			mesh.vertices = vertices;
-			mesh.triangles = triangles;
-			mesh.Optimize();
-			mesh.RecalculateNormals();
-
-			Matrix4x4 matrix = Matrix4x4.TRS(new Vector3(0f, 100f, 0f), Quaternion.identity, Vector3.one);
-			Material material = new Material(Shader.Find("Standard"));
-			material.enableInstancing = true;
 			
-			Graphics.DrawMeshInstanced(mesh, 0, material,new [] {matrix});
+
+			int[] tris = new int[6]
+			{
+				// lower left triangle
+				0, 2, 1,
+				// upper right triangle
+				2, 3, 1
+			};
+
+			Vector3[] normals = new Vector3[4]
+			{
+				Vector3.up,
+				Vector3.up,
+				Vector3.up,
+				Vector3.up
+			};
+
+			Vector2[] uv = new Vector2[4]
+			{
+				new Vector2(0, 0),
+				new Vector2(1, 0),
+				new Vector2(0, 1),
+				new Vector2(1, 1)
+			};
+
+			Mesh mesh = new Mesh {vertices = vertices, triangles = tris, normals = normals, uv = uv};
+			mesh.Optimize();
+
+			return mesh;
+
+			// Matrix4x4 matrix = Matrix4x4.TRS(new Vector3(0f, 100f, 0f), Quaternion.identity, Vector3.one);
+			// Material material = new Material(Shader.Find("Standard"));
+			// material.enableInstancing = true;
+			//
+			// Graphics.DrawMeshInstanced(mesh, 0, material,new [] {matrix});
+			// Graphics.DrawMeshInstancedProcedural
 		}
 
 		public void SetRenderDistance(int renderDistance)
@@ -158,14 +200,17 @@ namespace TechnOllieG
 					float noiseX = (float) (zeroIndexedChunkCoordinate.x * chunkSize + chunkSpaceBlockCoordinate.x) / worldSizeInBlocks * scale + xOffset;
 					float noiseY = (float) (zeroIndexedChunkCoordinate.y * chunkSize + chunkSpaceBlockCoordinate.y) / worldSizeInBlocks * scale + yOffset;
 
-					float2 chunkCoord2d = chunkCoordinates * chunkSize + chunkSpaceBlockCoordinate;
+					int2 chunkCoord2d = chunkCoordinates * chunkSize + chunkSpaceBlockCoordinate;
+					
+					int3 blockPos = new int3(chunkCoord2d.x,
+						(int) math.round(Mathf.PerlinNoise(noiseX, noiseY) * depth - layer), chunkCoord2d.y);
 
-					translation.Value.x = chunkCoord2d.x;
-					translation.Value.y = math.round(Mathf.PerlinNoise(noiseX, noiseY) * depth - layer);
-					translation.Value.z = chunkCoord2d.y;
+					translation.Value = blockPos;
+
 				}).ScheduleParallel();
 			
 			_currentlyGeneratedChunks.Add(chunkCoordinates);
+			_chunksScheduledForGeneration.Add(chunkCoordinates);
 		}
 		
 		private void DetermineChunksToGenerate(int2 currentChunk)
